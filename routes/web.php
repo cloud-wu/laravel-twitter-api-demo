@@ -11,6 +11,15 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\TweetController;
+
+Route::get('/twitter/callback', [LoginController::class, 'twitterCallback'])
+    ->name('twitter.callback');
+
+Route::post('tweet', [TweetController::class, 'store'])
+    ->name('tweet.store');
+
+Auth::routes();
+
+Route::get('/', 'HomeController@index')->name('home');

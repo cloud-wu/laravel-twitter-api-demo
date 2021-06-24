@@ -4,7 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use App\Repositories\UserRepository;
+use App\Services\TwitterService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -28,13 +35,39 @@ class LoginController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+    private $twitterService;
+    private $userRepository;
+
     /**
      * Create a new controller instance.
      *
-     * @return void
+     * @param TwitterService $twitterService
+     * @param UserRepository $userRepository
      */
-    public function __construct()
+    public function __construct(TwitterService $twitterService, UserRepository $userRepository)
     {
         $this->middleware('guest')->except('logout');
+        $this->twitterService = $twitterService;
+        $this->userRepository = $userRepository;
+    }
+
+    public function login()
+    {
+        try {
+            return $this->twitterService->login();
+        } catch (\Exception $e) {
+            return Redirect::route('login');
+        }
+    }
+
+    public function twitterCallback(Request $request)
+    {
+        try {
+            $this->twitterService->processCallback($request->oauth_token, $request->oauth_verifier);
+        } catch (\Exception $e) {
+            return Redirect::route('login');
+        }
+
+        return Redirect::route('home');
     }
 }
